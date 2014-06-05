@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import json
 from flask import Flask, request
 from os import getenv
 app = Flask(__name__)
@@ -22,10 +23,15 @@ def setup_logging():
 @app.route('/', methods=['GET', 'POST'], defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def log(path):
+    output = []
+    if request.headers:
+        output.append("\n")
+        output.append(str(request.headers))
     if request.form:
-        app.logger.info('request.form: %s', request.form)
+        output.append(request.form)
     if request.get_json(silent=True, cache=True):
-        app.logger.info('request.get_json() %s', request.get_json())
+        output.append(json.dumps(request.get_json(), indent=4))
+    app.logger.info("%s\n", "".join(output))
     return 'OK'
 
 if __name__ == '__main__':
